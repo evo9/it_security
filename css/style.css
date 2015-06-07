@@ -1,0 +1,161 @@
+html, body {
+    height: 100%;
+}
+body {
+    padding: 0;
+    margin: 0;
+    font-family: "Helvetica Neue", Helvetica, sans-serif;
+}
+
+header h1 {
+    text-align: center;
+}
+a {
+    color: #0078a8;
+}
+.clear {
+    clear: both;
+}
+
+.container {
+    width: 1000px;
+    margin: 0 auto;
+}
+
+.service_block {
+    height: 50px;
+    font-size: 12px;
+}
+
+#map, #map2 {
+    height: 600px;
+    position: relative;
+}
+#map > svg {
+}
+#map > svg > g.legend {
+    position: relative;
+}
+#map > svg > g.legend > g.legend_block {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+
+}
+path.datamaps_countries {
+    opacity: 0;
+}
+#map > .data_hover_block {
+    position: absolute;
+    z-index: 9999999;
+    display: none;
+    overflow: hidden;
+    background: #fff;
+}
+circle.datamaps-bubble:hover {
+    cursor: pointer;
+}
+
+#tooltip_container {
+    width: 250px;
+    font-size: 12px;
+}
+#tooltip_container > .inner {
+    position: relative;
+    background: #fff;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+    padding: 20px 10px 5px;
+    height: 160px;
+}
+#tooltip_container h2 {
+    font-size: 12px;
+    margin: 0 0 10px;
+}
+#tooltip_container a.close_tooltip_button {
+    display: block;
+    font-size: 23px;
+    position: absolute;
+    right: 7px;
+    text-decoration: none;
+    top: 0;
+    color: #c3c3c3;
+    font-weight: bold;
+}
+#tooltip_container a.close_tooltip_button:hover {
+    text-decoration: none;
+}
+#tooltip_container .tail_container {
+    margin: 0 auto;
+    width: 40px;
+    height: 20px;
+    position: relative;
+    overflow: hidden;
+}
+#tooltip_container .tail {
+    width: 17px;
+    height: 17px;
+    padding: 1px;
+    margin: -10px auto 0;
+    transform: rotate(45deg);
+    background: #fff;
+}
+#tooltip_container table {
+    width: 100%;
+    font-weight: bold;
+}
+
+.background {
+    fill: none;
+    pointer-events: all;
+}
+
+#world {
+    fill: #aaaaaa;
+}
+
+#world .active {
+    fill: #ff0000;
+    fill-opacity: .5;
+}
+
+#country-borders {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 1.5px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+path.link {
+    fill: none;
+    stroke: #666666;
+    stroke-width: 1.5px;
+}
+
+.stroke {
+    fill: none;
+    stroke: #000;
+    stroke-width: 3px;
+}
+
+.fill {
+    fill: #fff;
+}
+
+.graticule {
+    fill: none;
+    stroke: #777;
+    stroke-width: .5px;
+    stroke-opacity: .5;
+}
+
+.route {
+    fill: none;
+    stroke: blue;
+    stroke-width: 3px;
+}

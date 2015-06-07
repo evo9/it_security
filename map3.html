@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="css/style.css">
+
+<body onload="mapInit(); updater();">
+    <div class="service_block container"></div>
+    <div id="map" class="container"></div>
+    <script src="js/d3.v3.min.js"></script>
+    <script src="js/topojson.js"></script>
+    <script src="js/datamaps.all.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        function mapInit() {
+            map = new Datamap({
+                element: document.getElementById("map"),
+                fills: {
+                    defaultFill: "#abdda4",
+                    1: '#9467bd',
+                    2: '#ff9896',
+                    3: '#c5b0d5',
+                    4: '#ff7f0e',
+                    5: '#d62728',
+                    6: '#aec7e8',
+                    7: '#2ca02c',
+                    8: '#1f77b4',
+                    9: '#ffbb78',
+                    10: '#98df8a'
+                }
+            });
+
+            reloadGraph();
+        }
+    </script>
+</body>
+
+</html>

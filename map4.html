@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="css/style.css">
+<style>
+    body {
+        background: #222234;
+    }
+</style>
+
+<body onload="mapInit();">
+<div class="service_block container"></div>
+<div id="map" class="container"></div>
+    <script src="js/d3.v3.min.js"></script>
+    <script src="js/d3.geo.projection.v0.min.js"></script>
+    <!--<script src="js/topojson.v0.min.js"></script>-->
+    <script src="js/topojson.js"></script>
+    <script src="js/datamaps.all.js"></script>
+    <!--<script src="js/main2.js"></script>-->
+    <script src="js/main.js"></script>
+    <script>
+        function mapInit() {
+            map = new Datamap({
+                element: document.getElementById("map"),
+                fills: {
+                    defaultFill: "#2c2d42",
+                    1: '#9467bd',
+                    2: '#ff9896',
+                    3: '#c5b0d5',
+                    4: '#ff7f0e',
+                    5: '#d62728',
+                    6: '#aec7e8',
+                    7: '#2ca02c',
+                    8: '#1f77b4',
+                    9: '#ffbb78',
+                    10: '#98df8a'
+                },
+                legendTextColor: '#fff',
+                geographyConfig: {
+                    borderColor: '#4b4b67'
+                }
+            });
+
+            reloadGraph();
+        }
+    </script>
+</body>
+
+</html>

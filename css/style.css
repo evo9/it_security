@@ -27,21 +27,9 @@ a {
     font-size: 12px;
 }
 
-#map, #map2 {
+#map {
     height: 600px;
     position: relative;
-}
-#map > svg {
-}
-#map > svg > g.legend {
-    position: relative;
-}
-#map > svg > g.legend > g.legend_block {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 2;
-
 }
 path.datamaps_countries {
     opacity: 0;
@@ -158,4 +146,16 @@ path.link {
     fill: none;
     stroke: blue;
     stroke-width: 3px;
+}
+
+#service_block {
+    position: relative;
+}
+#service_block > svg {
+    position: absolute;
+    width: 80px;
+    height: 180px;
+    top: 10px;
+    left: 0;
+    z-index: 2;
 }

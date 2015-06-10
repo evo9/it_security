@@ -1,13 +1,14 @@
 function reloadGraph() {
 
     var token = document.cookie.split("SEC=").pop().split(";").shift();
-    var offence_limit = 100;
+    var offence_limit = 10;
 
-    var xhr = d3.xhr('/api/siem/offenses?limit=' + offence_limit, 'application/json')
+    var xhr = d3.xhr("/restapi/api/siem/offenses?filter=not+offense_source%3D'10.%25'+and+not+offense_source%3D'192.168.%25'+and+not+offense_source%3D'172.16.%25'+and+last_updated_time+%3E+" + ( ( new Date() ).getTime() - 86400000 ) , "application/json")
         .header('Accept', 'application/json')
         .header('SEC', token)
-        .header('Version', '2.0')
+        .header('Version', '3.0')
         .header('Allow-Experimental', 'true')
+        .header('Range', 'items=0-' + offence_limit)
         .header('Allow-Provisional', 'true');
 
     xhr.get(
@@ -172,4 +173,8 @@ function updater() {
         reloadGraph();
         updater();
     }, 300000);
+}
+
+function redraw() {
+    map.svg.selectAll("g").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 }

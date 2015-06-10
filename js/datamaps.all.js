@@ -159,7 +159,7 @@
     function addStyleBlock() {
         if (d3.select('.datamaps-style-block').empty()) {
             d3.select('head').append('style').attr('class', 'datamaps-style-block')
-                .html('.datamap path.datamaps-graticule { fill: none; stroke: #777; stroke-width: 0.5px; stroke-opacity: .5; pointer-events: none; } .datamap .labels {pointer-events: none;} .datamap path {stroke: #FFFFFF; stroke-width: 1px;} .datamaps-legend dt, .datamaps-legend dd { float: left; margin: 0 3px 0 0;} .datamaps-legend dd {width: 20px; margin-right: 6px; border-radius: 3px;} .datamaps-legend {padding-bottom: 20px; z-index: 1001; position: absolute; left: 4px; font-size: 12px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;} .datamaps-hoverover {display: none; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; } .hoverinfo {padding: 4px; border-radius: 1px; background-color: #FFF; box-shadow: 1px 1px 5px #CCC; font-size: 12px; border: 1px solid #CCC; } .hoverinfo hr {border:1px dotted #CCC; }');
+                .html('.datamap path.datamaps-graticule { fill: none; stroke: #777; stroke-width: 0.5px; stroke-opacity: .5; pointer-events: none; } .datamap .labels {pointer-events: none;} .datamap path.datamaps-subunit {stroke: #FFFFFF; stroke-width: 1px;} .datamaps-legend dt, .datamaps-legend dd { float: left; margin: 0 3px 0 0;} .datamaps-legend dd {width: 20px; margin-right: 6px; border-radius: 3px;} .datamaps-legend {padding-bottom: 20px; z-index: 1001; position: absolute; left: 4px; font-size: 12px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;} .datamaps-hoverover {display: none; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; } .hoverinfo {padding: 4px; border-radius: 1px; background-color: #FFF; box-shadow: 1px 1px 5px #CCC; font-size: 12px; border: 1px solid #CCC; } .hoverinfo hr {border:1px dotted #CCC; }');
         }
     }
 
@@ -167,28 +167,37 @@
         var fillData = this.options.fills;
         var self = this;
         var svg = this.svg;
+        var legend_svg = d3.select('#service_block').append('svg');
 
-        var legend = svg.select('g.legend');
+        var legend = legend_svg.select('g.legend');
         if (legend.empty()) {
-            legend = this.addLayer('legend', null, true);
+            //legend = this.addLayer('legend', null, true);
+            legend = legend_svg.append('g')
+                .attr('class', 'legend');
         }
+        /*legend.append('g')
+            .attr('class', 'legend_title')
+        legend.select('.legend_title').append('h4')
+            .text('Severity Level');*/
 
         legend.append('g')
             .attr('class', 'legend_block');
+        legend.select('g.legend_block')
+            .append('g')
+            .attr('class', 'legend_title')
+            .append('text')
+            .attr('x', 0)
+            .attr('y', 10)
+            .attr('font-size', '12px')
+            .attr('fill', this.options.legendTextColor)
+            .text('Severity Level');
 
         var x = 0,
-            y = 0,
-            y1 = 10,
+            y = 17,
+            y1 = 26,
             i = 1;
         for (key in fillData) {
             if (key != 'defaultFill') {
-                /*if (i == 6) {
-                    x = 100;
-                    y = 0;
-                    y1 = 10;
-                    legend.append('g')
-                        .attr('class', 'legend_block');
-                }*/
                 var legend_item = legend.selectAll('g.legend_block:last-child').append('g')
                     .attr('class', 'legend_item')
                     .attr('data-level', 'level_' + key)
@@ -278,6 +287,12 @@
             })
             .style('stroke-width', geoConfig.borderWidth)
             .style('stroke', geoConfig.borderColor);
+    }
+
+    function drawMarkers() {
+        var svg = this.svg;
+
+        var defs = svg.append('defs');
     }
 
     function handleGeographyConfig() {
@@ -394,6 +409,9 @@
             throw "Datamaps Error - arcs must be an array";
         }
 
+        var defs = svg.select('defs');
+        defs.selectAll('marker').remove()
+
         // For some reason arc options were put in an `options` object instead of the parent arc
         // I don't like this, so to match bubbles and other plugins I'm moving it
         // This is to keep backwards compatability
@@ -411,6 +429,8 @@
         var path = d3.geo.path()
             .projection(self.projection);
 
+        var i = 0;
+
         arcs
             .enter()
             .append('svg:path')
@@ -419,9 +439,6 @@
                 var arcColor = arcColors[val(datum.strokeColor, options.strokeColor, datum)];
                 return arcColor || arcColors.defaultColor;
             })
-            /*.style('stroke', function(datum) {
-             return val(datum.strokeColor, options.strokeColor, datum);
-             })*/
             .style('fill', 'none')
             .style('stroke-width', function (datum) {
                 return val(datum.strokeWidth, options.strokeWidth, datum);
@@ -467,6 +484,29 @@
                     cls += 'level_' + val(datum.level, options.level, datum);
                 }
                 return cls;
+            })
+            .attr('marker-end', function(datum) {
+                i ++;
+                defs.append('marker')
+                    .attr('id', 'arrow_' + i)
+                    .attr('viewBox', '-27 -12 29 24')
+                    .attr('markerWidth', 25)
+                    .attr('markerHeight', 36)
+                    .attr('orient', 'auto');
+
+                svg.select('#arrow_' + i).append('path')
+                    .attr('d', 'M0,0 L-10,-2 -8,0 -10,2 z')
+                    .attr('stroke', function () {
+                        var arcColor = arcColors[val(datum.strokeColor, options.strokeColor, datum)];
+                        return arcColor || arcColors.defaultColor;
+                    })
+                    .attr('fill', function () {
+                        var arcColor = arcColors[val(datum.strokeColor, options.strokeColor, datum)];
+                        return arcColor || arcColors.defaultColor;
+                    });
+
+
+                return 'url(#arrow_' + i + ')';
             });
 
         arcs.exit()
@@ -745,6 +785,7 @@
                     Datamaps.prototype.updateChoropleth.call(self, data);
                 });
             }
+            drawMarkers.call(self);
             drawLegend.call(self);
             drawSubunits.call(self, data);
             handleGeographyConfig.call(self);
@@ -12640,7 +12681,7 @@
             .style('opacity', 0.75);
 
         var color = element.select('rect').attr('fill');
-        d3.select(self.svg[0][0].parentNode).selectAll('.legend_item > rect').attr('fill', '#5f5f5f');
+        d3.selectAll('#service_block .legend_item > rect').attr('fill', '#5f5f5f');
         element.select('rect').attr('fill', color);
     };
 
@@ -12654,7 +12695,7 @@
 
         for (key in fillData) {
             if (key != 'defaultFill') {
-                d3.select(self.svg[0][0].parentNode).select('.legend_color.level_' + key)
+                d3.select('#service_block .legend_color.level_' + key)
                     .attr('fill', fillData[key]);
             }
         }

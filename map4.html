@@ -8,8 +8,8 @@
 </style>
 
 <body onload="mapInit();">
-<div class="service_block container"></div>
-<div id="map" class="container"></div>
+    <div id="service_block" class="container"></div>
+    <div id="map" class="container"></div>
     <script src="js/d3.v3.min.js"></script>
     <script src="js/d3.geo.projection.v0.min.js"></script>
     <!--<script src="js/topojson.v0.min.js"></script>-->
@@ -39,6 +39,8 @@
                     borderColor: '#4b4b67'
                 }
             });
+            map.svg.call(d3.behavior.zoom()
+                    .on("zoom", redraw));
 
             reloadGraph();
         }

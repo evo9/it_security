@@ -60,45 +60,47 @@ function loadEvent(i, offenses, offensesIpsData, destination) {
         if (!inArray(ip, ipArr)) {
             ipArr.push(ip);
             if (ip.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
-                d3.json('https://freegeoip.net/json/' + ip,
-                    function (error, data) {
-                        if (typeof data !== 'undefined') {
-                            if (offensesIpsData[ip].severity > 0) {
-                                var bubble = {
-                                    latitude: data.latitude,
-                                    longitude: data.longitude,
-                                    bubblesRadius: offensesIpsData[ip].event_count,
-                                    borderWidth: 0,
-                                    fillKey: offensesIpsData[ip].severity,
-                                    level: offensesIpsData[ip].severity
-                                }
-
-                                map.bubbles(bubble, {
-                                    popupTemplate: function (geo, data) {
-                                        return generatePopupTemplate(offensesIpsData[ip]);
-                                    }
-                                });
-
-                                var arcs = {
-                                    origin: {
+                if (!/^192\.168\.(.*)$/.test(ip) || !/^10\.(.*)$/.test(ip) || !/^172\.16\.(.*)$/.test(ip)) {
+                    d3.json('https://freegeoip.net/json/' + ip,
+                        function (error, data) {
+                            if (typeof data !== 'undefined') {
+                                if (offensesIpsData[ip].severity > 0) {
+                                    var bubble = {
                                         latitude: data.latitude,
-                                        longitude: data.longitude
-                                    },
-                                    destination: destination,
-                                    options: {
-                                        strokeColor: offensesIpsData[ip].severity,
+                                        longitude: data.longitude,
+                                        bubblesRadius: offensesIpsData[ip].event_count,
+                                        borderWidth: 0,
+                                        fillKey: offensesIpsData[ip].severity,
                                         level: offensesIpsData[ip].severity
                                     }
-                                };
 
-                                map.arc(arcs);
+                                    map.bubbles(bubble, {
+                                        popupTemplate: function (geo, data) {
+                                            return generatePopupTemplate(offensesIpsData[ip]);
+                                        }
+                                    });
+
+                                    var arcs = {
+                                        origin: {
+                                            latitude: data.latitude,
+                                            longitude: data.longitude
+                                        },
+                                        destination: destination,
+                                        options: {
+                                            strokeColor: offensesIpsData[ip].severity,
+                                            level: offensesIpsData[ip].severity
+                                        }
+                                    };
+
+                                    map.arc(arcs);
+                                }
+                            }
+                            else {
+                                console.log(data);
                             }
                         }
-                        else {
-                            console.log(data);
-                        }
-                    }
-                );
+                    );
+                }
             }
         }
         i ++;

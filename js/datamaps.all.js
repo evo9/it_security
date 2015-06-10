@@ -400,43 +400,33 @@
             .attr("d", this.path);
     }
 
+    function translateAlong(path) {
+        var l = path.getTotalLength();
+        var ps = path.getPointAtLength(0);
+        var pe = path.getPointAtLength(l);
+        var angl = Math.atan2(pe.y - ps.y, pe.x - ps.x) * (180 / Math.PI) - 90;
+        var rot_tran = "rotate(" + angl + ")";
+        return function(d, i, a) {
+            return function(t) {
+                var p = path.getPointAtLength(t * l);
+                return "translate(" + p.x + "," + p.y + ") " + rot_tran;
+            };
+        };
+    }
     function handleArcs(layer, data, options) {
         var self = this,
             arcColors = this.options.fills,
             svg = this.svg;
 
-        if (!data || (data && !data.slice)) {
-            throw "Datamaps Error - arcs must be an array";
-        }
-
-        var defs = svg.select('defs');
-        defs.selectAll('marker').remove()
-
-        // For some reason arc options were put in an `options` object instead of the parent arc
-        // I don't like this, so to match bubbles and other plugins I'm moving it
-        // This is to keep backwards compatability
-        for (var i = 0; i < data.length; i++) {
-            data[i] = defaults(data[i], data[i].options);
-            delete data[i].options;
-        }
-
         if (typeof options === "undefined") {
             options = defaultOptions.arcConfig;
         }
 
-        var arcs = layer.selectAll('path.datamaps-arc').data(data, JSON.stringify);
-
-        var path = d3.geo.path()
-            .projection(self.projection);
-
-        var i = 0;
-
-        arcs
-            .enter()
-            .append('svg:path')
+        var path = layer.append('svg:path')
+            .datum(data, JSON.stringify)
             .style('stroke-linecap', 'round')
             .style('stroke', function (datum) {
-                var arcColor = arcColors[val(datum.strokeColor, options.strokeColor, datum)];
+                var arcColor = arcColors[val(datum.options.strokeColor, options.strokeColor, datum)];
                 return arcColor || arcColors.defaultColor;
             })
             .style('fill', 'none')
@@ -444,9 +434,12 @@
                 return val(datum.strokeWidth, options.strokeWidth, datum);
             })
             .attr('d', function (datum) {
+
                 var originXY = self.latLngToXY(val(datum.origin.latitude, datum), val(datum.origin.longitude, datum))
                 var destXY = self.latLngToXY(val(datum.destination.latitude, datum), val(datum.destination.longitude, datum));
+
                 var midXY = [(originXY[0] + destXY[0]) / 2, (originXY[1] + destXY[1]) / 2];
+
                 if (options.greatArc) {
                     // TODO: Move this to inside `if` clause when setting attr `d`
                     var greatArc = d3.geo.greatArc()
@@ -462,57 +455,42 @@
                 var sharpness = val(datum.arcSharpness, options.arcSharpness, datum);
                 return "M" + originXY[0] + ',' + originXY[1] + "S" + (midXY[0] + (50 * sharpness)) + "," + (midXY[1] - (75 * sharpness)) + "," + destXY[0] + "," + destXY[1];
             })
-            .transition()
-            .delay(100)
-            .style('fill', function (datum) {
-                /*
-                 Thank you Jake Archibald, this is awesome.
-                 Source: http://jakearchibald.com/2013/animated-line-drawing-svg/
-                 */
-                var length = this.getTotalLength();
-                this.style.transition = this.style.WebkitTransition = 'none';
-                this.style.strokeDasharray = length + ' ' + length;
-                this.style.strokeDashoffset = length;
-                this.getBoundingClientRect();
-                this.style.transition = this.style.WebkitTransition = 'stroke-dashoffset ' + val(datum.animationSpeed, options.animationSpeed, datum) + 'ms ease-out';
-                this.style.strokeDashoffset = '0';
-                return 'none';
-            })
             .attr('class', function(datum) {
                 var cls = 'datamaps-arc ';
-                if (val(datum.level, options.level, datum) !== null) {
-                    cls += 'level_' + val(datum.level, options.level, datum);
+                if (val(datum.options.level, options.level, datum) !== null) {
+                    cls += 'level_' + val(datum.options.level, options.level, datum);
                 }
                 return cls;
-            })
-            .attr('marker-end', function(datum) {
-                i ++;
-                defs.append('marker')
-                    .attr('id', 'arrow_' + i)
-                    .attr('viewBox', '-27 -12 29 24')
-                    .attr('markerWidth', 25)
-                    .attr('markerHeight', 36)
-                    .attr('orient', 'auto');
-
-                svg.select('#arrow_' + i).append('path')
-                    .attr('d', 'M0,0 L-10,-2 -8,0 -10,2 z')
-                    .attr('stroke', function () {
-                        var arcColor = arcColors[val(datum.strokeColor, options.strokeColor, datum)];
-                        return arcColor || arcColors.defaultColor;
-                    })
-                    .attr('fill', function () {
-                        var arcColor = arcColors[val(datum.strokeColor, options.strokeColor, datum)];
-                        return arcColor || arcColors.defaultColor;
-                    });
-
-
-                return 'url(#arrow_' + i + ')';
             });
 
-        arcs.exit()
+        var totalLength = path.node().getTotalLength();
+
+        path
+            .attr("stroke-dasharray", totalLength + " " + totalLength)
+            .attr("stroke-dashoffset", totalLength)
             .transition()
-            .style('opacity', 0)
-            .remove();
+            .duration(1000)
+            .ease("linear")
+            .attr("stroke-dashoffset", 0);
+
+        var arrow = layer.append('path')
+            .datum(data, JSON.stringify)
+            .attr('d', d3.svg.symbol().type('circle').size(10))
+            //.attr('d', 'M0,0 L-10,-2 -8,0 -10,2 z')
+            .attr('stroke', function (datum) {
+                var arcColor = arcColors[val(datum.options.strokeColor, options.strokeColor, datum)];
+                return arcColor || arcColors.defaultColor;
+            })
+            .attr('fill', function (datum) {
+                var arcColor = arcColors[val(datum.options.strokeColor, options.strokeColor, datum)];
+                return arcColor || arcColors.defaultColor;
+            });
+
+        arrow.transition()
+            .duration(1000)
+            .ease("linear")
+            .attrTween("transform", translateAlong(path.node()));
+
     }
 
     function handleLabels(layer, options) {
@@ -565,15 +543,9 @@
             fillData = this.options.fills,
             svg = this.svg;
 
-        if (!data || (data && !data.slice)) {
-            throw "Datamaps Error - bubbles must be an array";
-        }
-
-        var bubbles = layer.selectAll('circle.datamaps-bubble').data(data, JSON.stringify);
-
-        bubbles
-            .enter()
+        layer
             .append('svg:circle')
+            .datum(data, JSON.stringify)
             .attr('cx', function (datum) {
                 var latLng;
                 if (datumHasCoords(datum)) {
@@ -667,12 +639,6 @@
                 }
                 return cls;
             });
-
-        bubbles.exit()
-            .transition()
-            .delay(options.exitDelay)
-            .attr("r", 0)
-            .remove();
 
         function datumHasCoords(datum) {
             return typeof datum !== 'undefined' && typeof datum.latitude !== 'undefined' && typeof datum.longitude !== 'undefined';

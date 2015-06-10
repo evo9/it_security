@@ -14,6 +14,8 @@ function reloadGraph() {
     xhr.get(
         function (error, response) {
             if (response) {
+                d3.selectAll('g.bubbles circle, g.arc path').remove();
+
                 var offenses = JSON.parse(response.responseText);
 
                 var offensesIpsData = {};
@@ -22,10 +24,6 @@ function reloadGraph() {
                 });
 
                 var destination_ip = '176.205.122.250';
-
-                destination = {};
-                arcsArr = [];
-                bubblesArr = [];
 
                 d3.json('https://freegeoip.net/json/' + destination_ip,
                     function (error, data) {
@@ -37,92 +35,87 @@ function reloadGraph() {
                                 borderWidth: 0,
                                 fillKey: 10
                             }
-                            bubblesArr.push(bubble);
-                            map.bubbles(bubblesArr);
 
-                            destination['latitude'] = data.latitude;
-                            destination['longitude'] = data.longitude;
+                            map.bubbles(bubble);
+                            var destination = {
+                                latitude: data.latitude,
+                                longitude: data.longitude
+                            };
+
+                            var i = 0;
+                            loadEvent(i, offenses, offensesIpsData, destination);
                         }
                     }
                 );
 
-                var i = 0;
-                loadEvent(i, offenses, offensesIpsData);
             }
         }
     );
 }
 
-function loadEvent(i, offenses, offensesIpsData) {
+function loadEvent(i, offenses, offensesIpsData, destination) {
     var ipArr = [];
 
-    //if (i <= offenses.length) {
+    while (i < offenses.length) {
+        var ip = offenses[i].offense_source;
 
-        while (i < offenses.length) {
-            var ip = offenses[i].offense_source;
+        if (!inArray(ip, ipArr)) {
+            ipArr.push(ip);
+            if (ip.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
+                d3.json('https://freegeoip.net/json/' + ip,
+                    function (error, data) {
+                        if (typeof data !== 'undefined') {
+                            if (offensesIpsData[ip].severity > 0) {
+                                var bubble = {
+                                    latitude: data.latitude,
+                                    longitude: data.longitude,
+                                    bubblesRadius: offensesIpsData[ip].event_count,
+                                    borderWidth: 0,
+                                    fillKey: offensesIpsData[ip].severity,
+                                    level: offensesIpsData[ip].severity
+                                }
 
-            if (!inArray(ip, ipArr)) {
-                ipArr.push(ip);
-                if (ip.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
-                    d3.json('https://freegeoip.net/json/' + ip,
-                        function (error, data) {
-                            if (typeof data !== 'undefined') {
-                                if (offensesIpsData[ip].severity > 0) {
-                                    var bubble = {
+                                map.bubbles(bubble, {
+                                    popupTemplate: function (geo, data) {
+                                        return generatePopupTemplate(offensesIpsData[ip]);
+                                    }
+                                });
+
+                                var arcs = {
+                                    origin: {
                                         latitude: data.latitude,
-                                        longitude: data.longitude,
-                                        bubblesRadius: offensesIpsData[ip].event_count / 10,
-                                        borderWidth: 0,
-                                        fillKey: offensesIpsData[ip].severity,
+                                        longitude: data.longitude
+                                    },
+                                    destination: destination,
+                                    options: {
+                                        strokeColor: offensesIpsData[ip].severity,
                                         level: offensesIpsData[ip].severity
                                     }
-                                    bubblesArr.push(bubble);
-                                    map.bubbles(bubblesArr, {
-                                        popupTemplate: function (geo, data) {
-                                            return generatePopupTemplate(offensesIpsData[ip]);
-                                        }
-                                    });
+                                };
 
-                                    var arcs = {
-                                        origin: {
-                                            latitude: data.latitude,
-                                            longitude: data.longitude
-                                        },
-                                        destination: destination,
-                                        options: {
-                                            strokeColor: offensesIpsData[ip].severity,
-                                            level: offensesIpsData[ip].severity
-                                        }
-                                    };
-                                    arcsArr.push(arcs);
-
-                                    map.arc(arcsArr);
-                                }
-                            }
-                            else {
-                                console.log(data);
+                                map.arc(arcs);
                             }
                         }
-                    );
-                }
-            }
-            i ++;
-            if (i == offenses.length) {
-                setTimeout(function() {
-                    reloadGraph();
-                }, 60000);
-            }
-            if (i % 10 == 0) {
-                setTimeout(function() {
-                    loadEvent(i, offenses, offensesIpsData);
-                }, 3000);
-                break;
+                        else {
+                            console.log(data);
+                        }
+                    }
+                );
             }
         }
-    //}
-
-
-
+        i ++;
+        if (i == offenses.length) {
+            setTimeout(function() {
+                reloadGraph();
+            }, 60000);
+        }
+        if (i % 10 == 0) {
+            setTimeout(function() {
+                loadEvent(i, offenses, offensesIpsData, destination);
+            }, 3000);
+            break;
+        }
+    }
 }
 
 /**
